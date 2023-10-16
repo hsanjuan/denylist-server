@@ -29,7 +29,7 @@ jobs:
         run: go build -o update-badbits ./cmd/denylist-append-from-url/
 
       - name: Run Script
-        run: ./update-badbits public/badbits.deny https://badbits.dwebops.pub/badbits.deny
+        run: ./update-badbits public/badbits.deny.txt https://badbits.dwebops.pub/badbits.deny
 
       - name: Commit Changes
         run: |
