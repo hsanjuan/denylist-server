@@ -39,7 +39,5 @@ jobs:
             git add public/badbits.deny
             git commit -m "Append new items to badbits"
             git push origin master
-          else
-            return 0
           fi
 
