@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/mail"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -40,7 +39,7 @@ func main() {
 	hints = append(hints, []string{"date", time.Now().UTC().Format("2006-01-02_15:04:05")})
 
 	cids := dls.FindCIDs(string(text))
-	file, err := os.OpenFile(filepath.Join(denylist, denylist), os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile(denylist, os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		panic("Error opening file for appending: " + err.Error())
 	}
