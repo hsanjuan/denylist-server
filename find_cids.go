@@ -44,10 +44,12 @@ func compileRegexps() []*regexp.Regexp {
 	return exps
 }
 
-// FindCIDs extracts CIDs and returns a deduplicated list of CIDv0s-strings
-// (b58-multihashes).
+// FindCIDs extracts CIDs from text. Returns a deduplicated list of CID
+// strings as they are found in the text. The list is deduplicated based on
+// their multihash, with later appereances of a CID triumphing over previous
+// ones containing the same multihash.
 func FindCIDs(s string) []string {
-	cids := make(map[string]struct{})
+	cids := make(map[string]string)
 
 	for _, exp := range cidRegexps {
 		cidStrs := exp.FindAllString(s, -1)
@@ -57,12 +59,12 @@ func FindCIDs(s string) []string {
 				logger.Warnf("could not decode %s as cid", cStr)
 				continue
 			}
-			cids[c.Hash().B58String()] = struct{}{}
+			cids[string(c.Hash())] = cStr
 		}
 	}
 	var results []string
-	for k := range cids {
-		results = append(results, k)
+	for _, v := range cids {
+		results = append(results, v)
 	}
 	return results
 }

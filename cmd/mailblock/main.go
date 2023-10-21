@@ -40,8 +40,12 @@ func main() {
 
 	var hints [][]string
 	switch {
+	case strings.Contains(subject, "abuse"):
+		fallthrough
 	case strings.Contains(subject, "phishing"):
 		hints = append(hints, []string{"reason", "phishing"})
+	case strings.Contains(subject, "dmca"):
+		fallthrough
 	case strings.Contains(subject, "copyright"):
 		hints = append(hints, []string{"reason", "copyright"})
 	}
