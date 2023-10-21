@@ -11,20 +11,30 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		panic("not enough args")
+	file := os.Stdout
+	var err error
+	if len(os.Args) == 2 {
+		denylist := os.Args[1]
+		file, err = os.OpenFile(denylist, os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			panic("Error opening file for appending: " + err.Error())
+		}
+		defer file.Close()
 	}
-	denylist := os.Args[1]
 
 	msg, err := mail.ReadMessage(os.Stdin)
 	if err != nil {
 		panic(err)
 	}
 
-	text, err := io.ReadAll(msg.Body)
+	body, err := io.ReadAll(msg.Body)
 	if err != nil {
 		panic(err)
 	}
+
+	text := string(body)
+	// unwrap lines
+	text = strings.ReplaceAll(text, "=\n", "")
 
 	subject := strings.ToLower(msg.Header.Get("Subject"))
 
@@ -38,12 +48,7 @@ func main() {
 
 	hints = append(hints, []string{"date", time.Now().UTC().Format("2006-01-02_15:04:05")})
 
-	cids := dls.FindCIDs(string(text))
-	file, err := os.OpenFile(denylist, os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		panic("Error opening file for appending: " + err.Error())
-	}
-	defer file.Close()
+	cids := dls.FindCIDs(text)
 
 	var builder strings.Builder
 	for _, c := range cids {
