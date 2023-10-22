@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/base64"
 	"io"
+	"mime"
+	"mime/multipart"
 	"net/mail"
 	"os"
 	"strings"
@@ -27,12 +30,22 @@ func main() {
 		panic(err)
 	}
 
-	body, err := io.ReadAll(msg.Body)
+	var text string
+
+	mediaType, params, err := mime.ParseMediaType(msg.Header.Get("Content-Type"))
 	if err != nil {
 		panic(err)
 	}
+	if strings.HasPrefix(mediaType, "multipart/") {
+		text = parseMultipart(msg.Body, params["boundary"])
+	} else {
+		body, err := io.ReadAll(msg.Body)
+		if err != nil {
+			panic(err)
+		}
+		text = string(body)
+	}
 
-	text := string(body)
 	// unwrap lines
 	text = strings.ReplaceAll(text, "=\n", "")
 
@@ -66,4 +79,44 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func parseMultipart(r io.Reader, boundary string) string {
+	var text string
+	mr := multipart.NewReader(r, boundary)
+	for {
+		p, err := mr.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+		mediaType, params, err := mime.ParseMediaType(p.Header.Get("Content-Type"))
+		if err != nil {
+			panic(err)
+		}
+		switch {
+		case strings.HasPrefix(mediaType, "multipart"):
+			text += parseMultipart(p, params["boundary"])
+		case strings.HasPrefix(mediaType, "text"):
+			b64 := p.Header.Get("Content-Transfer-Encoding") == "base64"
+
+			slurp, err := io.ReadAll(p)
+			if err != nil {
+				panic(err)
+			}
+
+			if b64 {
+				dec, err := base64.StdEncoding.DecodeString(string(slurp))
+				if err != nil {
+					panic(err)
+				}
+				text += string(dec)
+			} else {
+				text += string(slurp)
+			}
+		}
+	}
+	return text
 }
