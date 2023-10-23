@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -131,7 +132,7 @@ func appendLinesWithPrefixToFile(filePath string, lines []string, prefix string)
 	defer file.Close()
 
 	for _, line := range lines {
-		_, err := file.WriteString(prefix + line + "\n")
+		_, err := file.WriteString(prefix + line + " date=" + time.Now().UTC().Format("2006-01-02_15:04:05") + "\n")
 		if err != nil {
 			log.Fatalf("Error appending lines to local file: %v", err)
 		}
