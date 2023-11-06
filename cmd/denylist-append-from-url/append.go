@@ -29,11 +29,11 @@ func main() {
 		log.Fatalf("Error reading remote file: %v", err)
 	}
 
-	newLines := findMissingLinesInA(localLines, remoteLines)
+	newLines := findMissingLinesInA(localLines, remoteLines, false)
 	appendLinesWithPrefixToFile(localFilePath, newLines, "")
 
 	// Find lines in the local file that are not in the remote file and append them with `!`
-	missingLines := findMissingLinesInA(remoteLines, localLines)
+	missingLines := findMissingLinesInA(remoteLines, localLines, true)
 	appendLinesWithPrefixToFile(localFilePath, missingLines, "!")
 
 	// Print new lines appended to the file to stdout
@@ -107,7 +107,7 @@ func readRemoteFile(url string) ([]string, error) {
 	return lines, nil
 }
 
-func findMissingLinesInA(a, b []string) []string {
+func findMissingLinesInA(a, b []string, ignoreNeg bool) []string {
 	var newLines []string
 	localSet := make(map[string]bool)
 	for _, line := range a {
@@ -115,6 +115,9 @@ func findMissingLinesInA(a, b []string) []string {
 	}
 
 	for _, line := range b {
+		if ignoreNeg && line[0] == '!' {
+			continue
+		}
 		if _, exists := localSet[line]; !exists {
 			newLines = append(newLines, line)
 		}
