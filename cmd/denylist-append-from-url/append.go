@@ -109,16 +109,27 @@ func readRemoteFile(url string) ([]string, error) {
 
 func findMissingLinesInA(a, b []string, ignoreNeg bool) []string {
 	var newLines []string
-	localSet := make(map[string]bool)
+	aSet := make(map[string]struct{})
+	bSet := make(map[string]struct{})
+
+	// file a should have all the lines in b
 	for _, line := range a {
-		localSet[line] = true
+		aSet[line] = struct{}{}
 	}
 
+	// all the lines in b. if a line is negated
+	// then that line is not in b anymore.
 	for _, line := range b {
 		if ignoreNeg && line[0] == '!' {
-			continue
+			delete(bSet, line[1:])
+		} else {
+			bSet[line] = struct{}{}
 		}
-		if _, exists := localSet[line]; !exists {
+	}
+
+	// for every line in b, spit those that are not in a.
+	for line := range bSet {
+		if _, ok := aSet[line]; !ok {
 			newLines = append(newLines, line)
 		}
 	}
